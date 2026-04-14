@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportSphere AI - Главная</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏆 SportSphere AI</div>
+        <div class="nav-links">
+            <a href="/" class="active">Лента</a>
+            <a href="/workout.html">📹 Запись</a>
+            <a href="/challenge.html">🏆 Челленджи</a>
+            <a href="/profile.html">👤 Профиль</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Лента тренировок</h1>
+        <div id="video-feed" class="video-feed">
+            <div class="loading">Загрузка...</div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        async function loadFeed() {
+            try {
+                const response = await fetch('/api/videos');
+                const videos = await response.json();
+                const feed = document.getElementById('video-feed');
+                
+                if (videos.length === 0) {
+                    feed.innerHTML = '<div class="empty-state">Нет видео. Запишите первую тренировку!</div>';
+                    return;
+                }
+                
+                feed.innerHTML = videos.map(video => `
+                    <div class="video-card">
+                        <div class="video-preview">
+                            🎥 AI-видео
+                        </div>
+                        <div class="video-info">
+                            <div class="video-user">Пользователь: ${video.user_id}</div>
+                            <div class="video-stats">❤️ 0 лайков | 💬 0 комментариев</div>
+                            <div class="video-badge">🤖 AI-монтаж</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+            }
+        }
+        loadFeed();
+    </script>
+</body>
+</html>

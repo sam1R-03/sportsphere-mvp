@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-видео - SportSphere AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏆 SportSphere AI</div>
+        <div class="nav-links">
+            <a href="/">Лента</a>
+            <a href="/workout.html">📹 Запись</a>
+            <a href="/challenge.html">🏆 Челленджи</a>
+            <a href="/profile.html">👤 Профиль</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Ваше AI-видео готово!</h1>
+        
+        <div class="workout-form" style="text-align: center;">
+            <div class="camera-placeholder" style="height: 400px;">
+                🎬 AI-видео
+                <div class="camera-note">Автоматический монтаж с наложением данных</div>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <div class="video-badge">🤖 Сгенерировано AI</div>
+                <div class="video-badge" style="background: #ffaa0022; color: #ffaa00;">📊 Пульс: 145 bpm</div>
+                <div class="video-badge" style="background: #ffaa0022; color: #ffaa00;">🏃 Темп: 5:20/км</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Описание тренировки</label>
+                <textarea id="caption" rows="2" placeholder="Расскажите о своей тренировке..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Участвовать в челлендже</label>
+                <select id="joinChallenge">
+                    <option value="no">Нет</option>
+                    <option value="yes">Да, найти соперника моего уровня</option>
+                </select>
+            </div>
+            
+            <button class="btn-primary" onclick="publishVideo()">📤 Опубликовать в ленту</button>
+        </div>
+        
+        <div id="result" style="margin-top: 1rem;"></div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('id');
+        
+        function publishVideo() {
+            const caption = document.getElementById('caption').value;
+            const joinChallenge = document.getElementById('joinChallenge').value;
+            
+            let message = '✅ Видео опубликовано!';
+            if (joinChallenge === 'yes') {
+                message += ' Найден соперник вашего уровня. Челлендж начался!';
+            }
+            
+            document.getElementById('result').innerHTML = `
+                <div class="result-message success">
+                    ${message}<br>
+                    <a href="/">Перейти в ленту →</a>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

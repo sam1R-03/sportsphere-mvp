@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - SportSphere AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏆 SportSphere AI</div>
+        <div class="nav-links">
+            <a href="/">Лента</a>
+            <a href="/workout.html">📹 Запись</a>
+            <a href="/challenge.html">🏆 Челленджи</a>
+            <a href="/profile.html" class="active">👤 Профиль</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Профиль</h1>
+        
+        <div class="profile-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="workoutsCount">0</div>
+                <div>Тренировок</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="videosCount">0</div>
+                <div>AI-видео</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="challengesCount">0</div>
+                <div>Челленджей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">⭐ 75</div>
+                <div>Рейтинг доверия</div>
+            </div>
+        </div>
+        
+        <div class="workout-form">
+            <h3>Регистрация / Вход</h3>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Уровень подготовки</label>
+                    <select id="regLevel">
+                        <option value="beginner">Начинающий</option>
+                        <option value="intermediate">Средний</option>
+                        <option value="advanced">Продвинутый</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Зарегистрироваться</button>
+            </form>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <h2>Мои видео</h2>
+            <div id="myVideos" class="video-feed">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const userId = localStorage.getItem('userId');
+        
+        async function loadStats() {
+            try {
+                const workoutsRes = await fetch('/api/workouts');
+                const workouts = await workoutsRes.json();
+                const myWorkouts = workouts.filter(w => w.user_id === userId);
+                document.getElementById('workoutsCount').textContent = myWorkouts.length;
+                
+                const videosRes = await fetch('/api/videos');
+                const videos = await videosRes.json();
+                const myVideos = videos.filter(v => v.user_id === userId);
+                document.getElementById('videosCount').textContent = myVideos.length;
+                
+                const challengesRes = await fetch('/api/challenges');
+                const challenges = await challengesRes.json();
+                const myChallenges = challenges.filter(c => c.created_by === userId);
+                document.getElementById('challengesCount').textContent = myChallenges.length;
+                
+                const videosContainer = document.getElementById('myVideos');
+                if (myVideos.length === 0) {
+                    videosContainer.innerHTML = '<div class="empty-state">У вас пока нет видео. Запишите тренировку!</div>';
+                } else {
+                    videosContainer.innerHTML = myVideos.map(video => `
+                        <div class="video-card">
+                            <div class="video-preview">🎥 AI-видео</div>
+                            <div class="video-info">
+                                <div class="video-user">Видео ID: ${video.video_id}</div>
+                                <div class="video-stats">Стиль: ${video.style_id}</div>
+                                <div class="video-badge">🤖 ${video.is_ai_generated ? 'AI-монтаж' : 'Ручной'}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                password: document.getElementById('regPassword').value,
+                fitness_level: document.getElementById('regLevel').value,
+                role: 'user'
+            };
+            
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const user = await response.json();
+                localStorage.setItem('userId', user.user_id);
+                alert(`Добро пожаловать, ${user.username}!`);
+                location.reload();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+        
+        if (userId) {
+            document.getElementById('registerForm').style.display = 'none';
+            loadStats();
+        } else {
+            document.getElementById('myVideos').innerHTML = '<div class="empty-state">Зарегистрируйтесь, чтобы видеть свои видео</div>';
+        }
+    </script>
+</body>
+</html>

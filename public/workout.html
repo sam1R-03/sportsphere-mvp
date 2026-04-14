@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Запись тренировки - SportSphere AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏆 SportSphere AI</div>
+        <div class="nav-links">
+            <a href="/">Лента</a>
+            <a href="/workout.html" class="active">📹 Запись</a>
+            <a href="/challenge.html">🏆 Челленджи</a>
+            <a href="/profile.html">👤 Профиль</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Запись тренировки</h1>
+        
+        <div class="workout-form">
+            <div class="camera-placeholder">
+                📷 Окно камеры
+                <div class="camera-note">(в реальном приложении здесь будет камера)</div>
+            </div>
+            
+            <form id="workoutForm">
+                <div class="form-group">
+                    <label>Вид спорта</label>
+                    <select id="workoutType" required>
+                        <option value="running">🏃 Бег</option>
+                        <option value="gym">💪 Фитнес</option>
+                        <option value="yoga">🧘 Йога</option>
+                        <option value="workout">🤸 Воркаут</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Длительность (минут)</label>
+                    <input type="number" id="duration" required min="1" max="300">
+                </div>
+                
+                <div class="form-group">
+                    <label>Стиль AI-монтажа</label>
+                    <select id="styleId">
+                        <option value="dynamic">Динамичный</option>
+                        <option value="cinematic">Кинематографичный</option>
+                        <option value="minimal">Минималистичный</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Ссылка на исходное видео (опционально)</label>
+                    <input type="text" id="videoUrl" placeholder="https://...">
+                </div>
+                
+                <button type="submit" class="btn-primary">🚀 Завершить и обработать AI</button>
+            </form>
+        </div>
+        
+        <div id="result" class="result-message" style="display: none;"></div>
+    </main>
+
+    <script>
+        const form = document.getElementById('workoutForm');
+        const resultDiv = document.getElementById('result');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userId = localStorage.getItem('userId') || 'usr_demo';
+            const workoutData = {
+                user_id: userId,
+                duration: parseInt(document.getElementById('duration').value),
+                workout_type: document.getElementById('workoutType').value,
+                date: new Date().toISOString().split('T')[0],
+                raw_video_url: document.getElementById('videoUrl').value || 'demo_video_url'
+            };
+            
+            try {
+                // Создаем тренировку
+                const workoutRes = await fetch('/api/workouts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(workoutData)
+                });
+                const workout = await workoutRes.json();
+                
+                // Создаем AI-видео
+                const videoData = {
+                    workout_id: workout.workout_id,
+                    user_id: userId,
+                    video_url: 'https://storage.sportsphere.ai/ai_video_' + Date.now() + '.mp4',
+                    style_id: document.getElementById('styleId').value,
+                    is_ai_generated: true
+                };
+                
+                const videoRes = await fetch('/api/videos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(videoData)
+                });
+                const video = await videoRes.json();
+                
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message success';
+                resultDiv.innerHTML = `✅ Видео обработано AI!<br>
+                    Видео ID: ${video.video_id}<br>
+                    <a href="/video.html?id=${video.video_id}">Посмотреть результат →</a>`;
+                
+                form.reset();
+                
+                setTimeout(() => {
+                    window.location.href = '/video.html?id=' + video.video_id;
+                }, 2000);
+                
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message error';
+                resultDiv.innerHTML = '❌ Ошибка: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

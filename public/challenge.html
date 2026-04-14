@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Челленджи - SportSphere AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">🏆 SportSphere AI</div>
+        <div class="nav-links">
+            <a href="/">Лента</a>
+            <a href="/workout.html">📹 Запись</a>
+            <a href="/challenge.html" class="active">🏆 Челленджи</a>
+            <a href="/profile.html">👤 Профиль</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1>Челленджи</h1>
+        
+        <div class="workout-form">
+            <h3>Создать новый челлендж</h3>
+            <form id="challengeForm">
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="challengeTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="challengeDesc" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Уровень сложности</label>
+                    <select id="difficulty">
+                        <option value="beginner">Начинающий</option>
+                        <option value="intermediate">Средний</option>
+                        <option value="advanced">Продвинутый</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Дата начала</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Дата окончания</label>
+                    <input type="date" id="endDate" required>
+                </div>
+                <button type="submit" class="btn-primary">Создать челлендж</button>
+            </form>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <h2>Активные челленджи</h2>
+            <div id="challengesList" class="challenges-list">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadChallenges() {
+            try {
+                const response = await fetch('/api/challenges');
+                const challenges = await response.json();
+                const container = document.getElementById('challengesList');
+                
+                if (challenges.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Нет активных челленджей. Создайте первый!</div>';
+                    return;
+                }
+                
+                container.innerHTML = challenges.map(ch => `
+                    <div class="challenge-card">
+                        <div class="challenge-title">🏆 ${ch.title}</div>
+                        <div class="challenge-difficulty difficulty-${ch.difficulty_level}">
+                            ${ch.difficulty_level === 'beginner' ? 'Начинающий' : ch.difficulty_level === 'intermediate' ? 'Средний' : 'Продвинутый'}
+                        </div>
+                        <div class="challenge-description">${ch.description || 'Без описания'}</div>
+                        <div class="challenge-dates">📅 ${ch.start_date} — ${ch.end_date}</div>
+                        <button class="btn-primary" style="margin-top: 1rem;" onclick="joinChallenge('${ch.challenge_id}')">Принять участие</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Ошибка:', error);
+            }
+        }
+        
+        async function joinChallenge(challengeId) {
+            alert(`Вы вступили в челлендж ${challengeId}! Соревнуйтесь с равными по уровню.`);
+        }
+        
+        document.getElementById('challengeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const challengeData = {
+                title: document.getElementById('challengeTitle').value,
+                description: document.getElementById('challengeDesc').value,
+                difficulty_level: document.getElementById('difficulty').value,
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                created_by: localStorage.getItem('userId') || 'usr_demo'
+            };
+            
+            try {
+                const response = await fetch('/api/challenges', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(challengeData)
+                });
+                const challenge = await response.json();
+                alert(`Челлендж "${challenge.title}" создан!`);
+                document.getElementById('challengeForm').reset();
+                loadChallenges();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+        
+        loadChallenges();
+    </script>
+</body>
+</html>
