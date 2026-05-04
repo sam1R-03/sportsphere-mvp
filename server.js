@@ -39,6 +39,33 @@ function writeDB(data) {
 
 initDB();
 
+// Функция отправки в Битрикс24
+async function sendToBitrix24(userData) {
+    const WEBHOOK_URL = 'https://b24-istmml.bitrix24.ru/rest/1/02r1na35yom02398/';
+    
+    const fields = {
+        NAME: userData.username,
+        EMAIL: [{ VALUE: userData.email, VALUE_TYPE: 'WORK' }],
+        UF_CRM_ROLE: userData.role || 'user',
+        UF_CRM_SKILL_LEVEL: userData.fitness_level || 'beginner',
+        UF_CRM_USER_ID: userData.user_id,
+        UF_CRM_ACTIVITY_SCORE: 0,
+        UF_CRM_REG_DATE: new Date().toISOString().split('T')[0]
+    };
+    
+    try {
+        const response = await fetch(WEBHOOK_URL + 'crm.contact.add.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields })
+        });
+        const result = await response.json();
+        console.log('CRM ответ:', result);
+    } catch (error) {
+        console.error('Ошибка отправки в CRM:', error.message);
+    }
+}
+
 // API: создать тренировку
 app.post('/api/workouts', (req, res) => {
     const { user_id, duration, workout_type, date, raw_video_url } = req.body;
@@ -131,8 +158,8 @@ app.post('/api/reactions', (req, res) => {
     res.json(newReaction);
 });
 
-// API: регистрация пользователя
-app.post('/api/users', (req, res) => {
+// API: регистрация пользователя (с отправкой в Битрикс24)
+app.post('/api/users', async (req, res) => {
     const { username, email, password, role, fitness_level } = req.body;
     const db = readDB();
     const newUser = {
@@ -146,6 +173,16 @@ app.post('/api/users', (req, res) => {
     };
     db.users.push(newUser);
     writeDB(db);
+    
+    // Отправка в Битрикс24 (не ждём ответа)
+    sendToBitrix24({
+        user_id: newUser.user_id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        fitness_level: newUser.fitness_level
+    });
+    
     res.json({ user_id: newUser.user_id, username: newUser.username });
 });
 
