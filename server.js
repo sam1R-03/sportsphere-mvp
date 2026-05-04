@@ -41,7 +41,7 @@ initDB();
 
 // Функция отправки в Битрикс24
 async function sendToBitrix24(userData) {
-    const WEBHOOK_URL = 'https://b24-istmml.bitrix24.ru/rest/1/02r1na35yom02398/';
+    const WEBHOOK_URL = 'https://b24-istmml.bitrix24.ru/rest/1/txef51my7nbmkec3/';
     
     const fields = {
         NAME: userData.username,
@@ -61,8 +61,10 @@ async function sendToBitrix24(userData) {
         });
         const result = await response.json();
         console.log('CRM ответ:', result);
+        return result;
     } catch (error) {
         console.error('Ошибка отправки в CRM:', error.message);
+        return null;
     }
 }
 
@@ -174,7 +176,7 @@ app.post('/api/users', async (req, res) => {
     db.users.push(newUser);
     writeDB(db);
     
-    // Отправка в Битрикс24 (не ждём ответа)
+    // Отправка в Битрикс24 (не ждём ответа, чтобы не тормозить регистрацию)
     sendToBitrix24({
         user_id: newUser.user_id,
         username: newUser.username,
@@ -184,6 +186,18 @@ app.post('/api/users', async (req, res) => {
     });
     
     res.json({ user_id: newUser.user_id, username: newUser.username });
+});
+
+// Тестовый endpoint для проверки интеграции
+app.get('/test-bitrix', async (req, res) => {
+    const result = await sendToBitrix24({
+        user_id: 'test_123',
+        username: 'ТестИзБраузера',
+        email: 'test@browser.ru',
+        role: 'user',
+        fitness_level: 'beginner'
+    });
+    res.json(result);
 });
 
 app.listen(PORT, () => {
